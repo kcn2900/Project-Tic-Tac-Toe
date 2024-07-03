@@ -7,6 +7,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
 }
 
 .board {
@@ -25,7 +26,7 @@ body {
     box-sizing: border-box;
 }
 
-button {
+.board>button {
     appearance: none;
     box-shadow: inset 0px 0px 5px 1px gray;
     background-color: lightgray;

@@ -17,6 +17,17 @@ function gameBoard() {
         return `${boardArr[0]}\n${boardArr[1]}\n${boardArr[2]}`;
     }
 
+    const resetBoard = () => {
+        boardArr = [
+            ['', '', ''],
+            ['', '', ''],
+            ['', '', '']
+        ]
+    }
+
+    // try to return a list of squares that made the win possible
+    // probably need if statements and static list
+    // could just return a list of numbers to later convert to rows/cols
     const checkWin = () => {
         // check all columns, rows, and diagonals
         for (let i = 0; i < 3; i++) {
@@ -61,7 +72,7 @@ function gameBoard() {
         return "neither";
     }
 
-    return {getSquare, printBoard, setSquare, checkWin};
+    return {getSquare, printBoard, setSquare, checkWin, resetBoard};
 };
 
 function gamePlayer(name, shape) {
@@ -88,7 +99,23 @@ function squareBoard(board) {
         squareArr[row][col];
     };
 
-    return {drawSquare, getSquare};
+    const resetDisplay = () => {
+        // let index = 1;
+        // squareArr.forEach((square) => {
+        //     console.log(square);
+        //     square.fill(index);
+        //     index++;
+        // })
+        let index = 1;
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                squareArr[i][j].fill(index);
+                index++;
+            }
+        }
+    };
+
+    return {drawSquare, getSquare, resetDisplay};
 }
 
 function squareObject(index) {
@@ -110,97 +137,111 @@ function squareObject(index) {
 };
 
 function playGame() {
+    const page = document.querySelector("body");
     const grid = document.querySelector(".board");
-    let player_turn = 0;
-
+    const start = document.querySelector(".startBtn");
+    const reset = document.createElement("button");
+    const results = document.createElement("div");
     const boardMap = {
         1: [0, 0], 2: [0, 1], 3: [0, 2],
         4: [1, 0], 5: [1, 1], 6: [1, 2],
         7: [2, 0], 8: [2, 1], 9: [2, 2],
     }
     const board = gameBoard();
-    const playerOne = gamePlayer("one", "X");
-    const playerTwo = gamePlayer("two", "O");
-    let count = 0;
-    let stopGame = false;
-
     const display = squareBoard(board);
+    let playerOne, playerTwo;
+    let player_turn = 0;
+    let count = 0;
+    let item;
 
-    grid.addEventListener('click', (e) => {
+    start.addEventListener('click', () => {
+        startGame();
+    });
+
+    page.appendChild(reset);
+    reset.className = "resetBtn";
+    reset.textContent = "Reset";
+    reset.style.visibility = "hidden";
+    reset.addEventListener('click', resetGame);
+
+    function resetGame() {
+        player_turn = 0;
+
+        start.style.visibility = "visible";
+        reset.style.visibility = "hidden";
+        page.removeChild(results);
+
+        grid.removeEventListener('click', gameRun);
+        display.resetDisplay();
+        board.resetBoard();
+        count = 0;
+    };
+
+    function startGame() {
+        let name1 = prompt("Name of first player (X):");
+        let name2 = prompt("Name of second player (O):");
+        while (name1 === name2) {
+            name2 = prompt("[Different from first player]"
+                + " Name of second player (O)");
+        }
+
+        playerOne = gamePlayer(name1, "X");
+        playerTwo = gamePlayer(name2, "O");
+
+        grid.addEventListener('click', gameRun);
+        start.style.visibility = "hidden";
+        reset.style.visibility = "visible";
+    }
+
+    function gameRun(e) {
         const index = +e.target.id;
 
-        let item;
-        if (player_turn === 0) {
-            item = 'X';
-            player_turn = 1;
-        }
-        else {
-            item = 'O';
-            player_turn = 0;
-        }
-
-        if (count >= 9) {
-            console.log("TIE!");
-            stopGame = true;
-        }
-        else if (board.checkWin() === playerOne.shape) {
-            console.log(`Player One Wins! (${playerOne.shape})`);
-            stopGame = true;
-        }
-        else if (board.checkWin() === playerTwo.shape) {
-            console.log(`Player Two Wins! (${playerTwo.shape})`);
-            stopGame = true;
-        }
-
-        if (!stopGame)
+        if (board.getSquare(...boardMap[index]) === '') {
+            if (player_turn === 0) {
+                item = playerOne.shape;
+                player_turn++;
+            }
+            else {
+                item = playerTwo.shape;
+                player_turn--;
+            }
             display.drawSquare(...boardMap[index], item);
+        }
+        else
+            return;
 
         console.log(board.printBoard());
         count++;
-    });
 
-    // while (true) {
-    //     let p1;
-    //     do {
-    //         p1 = prompt(
-    //             `${playerOne.name}'s turn (${playerOne.shape}) [1-9]`
-    //         );
-    //     }
-    //     while (board.getSquare(...boardMap[p1]) !== '');
-        
-    //     count++;
-    //     board.setSquare(...boardMap[p1], playerOne.shape);
-    //     if (count >= 9) {
-    //         console.log("TIE!")
-    //         break;
-    //     }
-    //     else if (board.checkWin() === playerOne.shape) {
-    //         console.log(`Player One Wins! (${playerOne.shape})`)
-    //         break;
-    //     }
+        if (count >= 9) {
+            console.log("TIE!");
+            displayResult("tie");
+        }
+        else if (board.checkWin() === playerOne.shape) {
+            console.log(`Player One Wins! (${playerOne.shape})`);
+            displayResult(playerOne.name);
+        }
+        else if (board.checkWin() === playerTwo.shape) {
+            console.log(`Player Two Wins! (${playerTwo.shape})`);
+            displayResult(playerTwo.name);
+        }
 
-    //     let p2;
-    //     do {
-    //         p2 = prompt(
-    //             `${playerTwo.name}'s turn (${playerTwo.shape}) [1-9]`
-    //         );
-    //     }
-    //     while (board.getSquare(...boardMap[p2]) !== '');
+        if (count >= 9 || board.checkWin() !== "neither") {
+            grid.removeEventListener('click', gameRun);
+            return;
+        }
+    };
 
-    //     count++;
-    //     board.setSquare(...boardMap[p2], playerTwo.shape);
-    //     if (count >= 9) {
-    //         console.log("TIE!")
-    //         break;
-    //     }
-    //     else if (board.checkWin() === playerTwo.shape) {
-    //         console.log(`Player Two Wins! (${playerTwo.shape})`)
-    //         break;
-    //     }
+    function displayResult(name) {
+        page.appendChild(results);
 
-    //     console.log(board.printBoard());
-    // }
+        if (name === "tie")
+            results.textContent = "DRAW: Neither players win."
+        else
+            results.textContent = `Player ${name} Wins!`;
+    }
 
+    displayResult("test");
 }
 
 playGame();
