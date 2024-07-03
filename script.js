@@ -35,10 +35,20 @@ function gameBoard() {
             let x_row = boardArr[i].filter((item) => item === "X");
             let o_row = boardArr[i].filter((item) => item === "O");
     
-            if (x_row.length === 3)
-                return "X";
-            else if (o_row.length === 3)
-                return "O"
+            if (x_row.length === 3) {
+                if (i == 0)
+                    return ["X", [1, 2, 3]];
+                else if (i == 1)
+                    return ["X", [4, 5, 6]];
+                return ["X", [7, 8, 9]];
+            }
+            else if (o_row.length === 3) {
+                if (i == 0)
+                    return ["O", [1, 2, 3]];
+                else if (i == 1)
+                    return ["O", [4, 5, 6]];
+                return ["O", [7, 8, 9]];
+            }
     
             // check current column
             let col = "";
@@ -49,10 +59,21 @@ function gameBoard() {
             let x_col = (col.match(/X/g) || []).length;
             let o_col = (col.match(/O/g) || []).length;
     
-            if (x_col === 3)
-                return "X";
-            else if (o_col === 3)
-                return "O"
+            if (x_col === 3) {
+                if (i == 0)
+                    return ["X", [1, 4, 7]];
+                else if (i == 1)
+                    return ["X", [2, 5, 8]];
+                return ["X", [3, 6, 9]];
+            }
+                
+            else if (o_col === 3) {
+                if (i == 0)
+                    return ["O", [1, 4, 7]];
+                else if (i == 1)
+                    return ["O", [2, 5, 8]];
+                return ["O", [3, 6, 9]];
+            }
         }
     
         // check for diagonals
@@ -64,12 +85,18 @@ function gameBoard() {
         let x_diagTwo = (diagTwo.match(/X/g) || []).length;
         let o_diagTwo = (diagTwo.match(/O/g) || []).length;
     
-        if (x_diagOne === 3 || x_diagTwo === 3)
-            return "X";
-        else if (o_diagOne === 3 || o_diagTwo === 3)
-            return "O"
-    
-        return "neither";
+        if (x_diagOne === 3 || x_diagTwo === 3) {
+            if (x_diagOne === 3 || x_diagTwo !== 3)
+                return ["X", [1, 5, 9]];
+            return ["X", [3, 5, 7]];
+        }
+        else if (o_diagOne === 3 || o_diagTwo === 3) {
+            if (x_diagOne === 3 || x_diagTwo !== 3)
+                return ["O", [1, 5, 9]];
+            return ["O", [3, 5, 7]];
+        }
+
+        return ["neither"];
     }
 
     return {getSquare, printBoard, setSquare, checkWin, resetBoard};
@@ -100,22 +127,23 @@ function squareBoard(board) {
     };
 
     const resetDisplay = () => {
-        // let index = 1;
-        // squareArr.forEach((square) => {
-        //     console.log(square);
-        //     square.fill(index);
-        //     index++;
-        // })
         let index = 1;
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 squareArr[i][j].fill(index);
+                squareArr[i][j].colorIn("lightgray");
                 index++;
             }
         }
     };
 
-    return {drawSquare, getSquare, resetDisplay};
+    const showResults = (arr) => {
+        for (let i = 0; i < 3; i++) {
+            squareArr[arr[i][0]][arr[i][1]].colorIn("red");
+        }
+    }
+
+    return {drawSquare, getSquare, resetDisplay, showResults};
 }
 
 function squareObject(index) {
@@ -131,9 +159,13 @@ function squareObject(index) {
 
     const fill = (shape) => {
         square.textContent = `${shape}`;
-    }
+    };
 
-    return {index, square, fill};
+    const colorIn = (color) => {
+        square.style.backgroundColor = color;
+    };
+
+    return {index, square, fill, colorIn};
 };
 
 function playGame() {
@@ -164,6 +196,7 @@ function playGame() {
     reset.style.visibility = "hidden";
     reset.addEventListener('click', resetGame);
 
+    // reset values of each board (display + game) and add back start btn
     function resetGame() {
         player_turn = 0;
 
@@ -177,6 +210,7 @@ function playGame() {
         count = 0;
     };
 
+    // ask for player names and show reset button
     function startGame() {
         let name1 = prompt("Name of first player (X):");
         let name2 = prompt("Name of second player (O):");
@@ -193,6 +227,7 @@ function playGame() {
         reset.style.visibility = "visible";
     }
 
+    // change both display and game board while checking for winner/tie
     function gameRun(e) {
         const index = +e.target.id;
 
@@ -213,27 +248,36 @@ function playGame() {
         console.log(board.printBoard());
         count++;
 
+        let winResults = board.checkWin();
+
         if (count >= 9) {
             console.log("TIE!");
             displayResult("tie");
         }
-        else if (board.checkWin() === playerOne.shape) {
+        else if (winResults[0] === playerOne.shape) {
             console.log(`Player One Wins! (${playerOne.shape})`);
-            displayResult(playerOne.name);
+            displayResult(playerOne.name, winResults[1]);
         }
-        else if (board.checkWin() === playerTwo.shape) {
+        else if (winResults[0] === playerTwo.shape) {
             console.log(`Player Two Wins! (${playerTwo.shape})`);
-            displayResult(playerTwo.name);
+            displayResult(playerTwo.name, winResults[1]);
         }
 
-        if (count >= 9 || board.checkWin() !== "neither") {
+        if (count >= 9 || winResults[0] !== "neither") {
             grid.removeEventListener('click', gameRun);
             return;
         }
     };
 
-    function displayResult(name) {
+    function displayResult(name, list) {
         page.appendChild(results);
+
+        console.log(list);
+        display.showResults([
+            boardMap[list[0]],
+            boardMap[list[1]],
+            boardMap[list[2]]
+        ]);
 
         if (name === "tie")
             results.textContent = "DRAW: Neither players win."
@@ -241,7 +285,7 @@ function playGame() {
             results.textContent = `Player ${name} Wins!`;
     }
 
-    displayResult("test");
+    // displayResult("test");
 }
 
 playGame();
