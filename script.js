@@ -91,7 +91,7 @@ function gameBoard() {
             return ["X", [3, 5, 7]];
         }
         else if (o_diagOne === 3 || o_diagTwo === 3) {
-            if (x_diagOne === 3 || x_diagTwo !== 3)
+            if (o_diagOne === 3 || o_diagTwo !== 3)
                 return ["O", [1, 5, 9]];
             return ["O", [3, 5, 7]];
         }
@@ -173,7 +173,10 @@ function playGame() {
     const grid = document.querySelector(".board");
     const start = document.querySelector(".startBtn");
     const reset = document.createElement("button");
-    const results = document.createElement("div");
+    const results = document.querySelector(".display-hidden");
+    const pOneInput = document.getElementById("p1Name");
+    const pTwoInput = document.getElementById("p2Name");
+
     const boardMap = {
         1: [0, 0], 2: [0, 1], 3: [0, 2],
         4: [1, 0], 5: [1, 1], 6: [1, 2],
@@ -181,14 +184,12 @@ function playGame() {
     }
     const board = gameBoard();
     const display = squareBoard(board);
-    let playerOne, playerTwo;
+    let playerOne, playerTwo, name1, name2;
     let player_turn = 0;
     let count = 0;
     let item;
 
-    start.addEventListener('click', () => {
-        startGame();
-    });
+    start.addEventListener('click', startGame);
 
     page.appendChild(reset);
     reset.className = "resetBtn";
@@ -196,13 +197,39 @@ function playGame() {
     reset.style.visibility = "hidden";
     reset.addEventListener('click', resetGame);
 
+    function getName1(e) {
+        if (e.key === "Enter") {
+            name1 = pOneInput.value;
+            pOneInput.className = "input-hidden";
+            pOneInput.removeEventListener('keydown', getName1); 
+
+            pTwoInput.className = "input2";;
+            pTwoInput.addEventListener('keydown', getName2);
+        }
+    };
+
+    function getName2(e) {
+        if (e.key === "Enter") {
+            name2 = pTwoInput.value;
+            pTwoInput.className = "input-hidden";
+            pTwoInput.removeEventListener('keydown', getName2); 
+
+            playerOne = gamePlayer(name1, "X");
+            playerTwo = gamePlayer(name2, "O");
+
+            grid.addEventListener('click', gameRun);
+            reset.style.visibility = "visible";
+        }
+    }
+
     // reset values of each board (display + game) and add back start btn
     function resetGame() {
         player_turn = 0;
 
-        start.style.visibility = "visible";
+        // start.style.visibility = "visible";
+        start.className = "startBtn";
         reset.style.visibility = "hidden";
-        page.removeChild(results);
+        results.className = "display-hidden";
 
         grid.removeEventListener('click', gameRun);
         display.resetDisplay();
@@ -212,19 +239,16 @@ function playGame() {
 
     // ask for player names and show reset button
     function startGame() {
-        let name1 = prompt("Name of first player (X):");
-        let name2 = prompt("Name of second player (O):");
-        while (name1 === name2) {
-            name2 = prompt("[Different from first player]"
-                + " Name of second player (O)");
-        }
+        start.className = "startBtn-hidden"
+        pOneInput.className = "input1";
+        pOneInput.addEventListener('keydown', getName1);
 
-        playerOne = gamePlayer(name1, "X");
-        playerTwo = gamePlayer(name2, "O");
-
-        grid.addEventListener('click', gameRun);
-        start.style.visibility = "hidden";
-        reset.style.visibility = "visible";
+        // let name1 = prompt("Name of first player (X):");
+        // let name2 = prompt("Name of second player (O):");
+        // while (name1 === name2) {
+        //     name2 = prompt("[Different from first player]"
+        //         + " Name of second player (O)");
+        // }
     }
 
     // change both display and game board while checking for winner/tie
@@ -270,19 +294,20 @@ function playGame() {
     };
 
     function displayResult(name, list) {
-        page.appendChild(results);
-
-        console.log(list);
-        display.showResults([
-            boardMap[list[0]],
-            boardMap[list[1]],
-            boardMap[list[2]]
-        ]);
-
         if (name === "tie")
             results.textContent = "DRAW: Neither players win."
-        else
+        else {
+            display.showResults([
+                boardMap[list[0]],
+                boardMap[list[1]],
+                boardMap[list[2]]
+            ]);
+
             results.textContent = `Player ${name} Wins!`;
+        }
+
+        results.className = "display-show";
+            
     }
 
     // displayResult("test");

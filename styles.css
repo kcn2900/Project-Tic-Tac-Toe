@@ -4,10 +4,18 @@
 }
 
 body {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
+}
+
+.display-show {
+    margin-top: 2vh;
+    max-width: auto;
+    max-height: 0;
+    font-size: xx-large;
 }
 
 .board {
@@ -33,3 +41,34 @@ body {
     border: none;
     font-size: large;
 }
+
+.startBtn,
+.resetBtn {
+    font-size: 20px;
+    margin-top: 2vh;
+    padding: 5px 15px;
+    border-radius: 10px;
+    appearance: none;
+    background-color: lightgray;
+    max-height: auto;
+}
+
+.startBtn-hidden,
+.display-hidden,
+.input-hidden {
+    visibility: hidden;
+    max-height: 0;
+    max-width: 0;
+}
+
+.input1,
+.input2 {
+    margin-top: 10px;
+    max-width: auto;
+    max-width: auto;
+    border: 1px black solid;
+    padding: 5px 10px;
+    border-radius: 5px;
+    box-shadow: inset 0px 0px 5x 1px black;
+}
+
